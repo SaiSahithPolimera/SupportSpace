@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  fullName  String
+  username  String     @unique
+  email     String     @unique
+  password  String
+  userType  UserType   
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  Creator   Creator?   @relation("UserCreator") 
+  Supporter Supporter? @relation("UserSupporter")
+}
+
+model Creator {
+  id            Int         @id @default(autoincrement())
+  bio           String
+  websiteLink   String?
+  paymentMethod String?
+  category      String?     
+  user          User        @relation(fields: [userId], references: [id], name: "UserCreator")
+  userId        Int         @unique
+  funds         Fund[]      @relation("CreatorFunds")
+  supporters    Supporter[] @relation("CreatorSupporters")
+}
+
+
+model Supporter {
+  id                Int       @id @default(autoincrement())
+  user              User      @relation(fields: [userId], references: [id], name: "UserSupporter")
+  userId            Int       @unique
+  supportedCreators Creator[] @relation("CreatorSupporters")
+  Fund              Fund[]
+}
+
+model Fund {
+  id          Int       @id @default(autoincrement())
+  amount      Float
+  createdAt   DateTime  @default(now())
+  creator     Creator   @relation("CreatorFunds", fields: [creatorId], references: [id])
+  creatorId   Int
+  supporter   Supporter @relation(fields: [supporterId], references: [id])
+  supporterId Int
+}
+
+enum UserType {
+  CREATOR
+  SUPPORTER
+}
