@@ -17,18 +17,26 @@ const ProfileSetup = () => {
       const response = await fetch("http://localhost:5000/api/profile-setup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, bio, websiteLink, paymentMethod, category }),
+        body: JSON.stringify({
+          username,
+          bio,
+          websiteLink,
+          paymentMethod,
+          category,
+        }),
       });
 
       const data = await response.json();
       if (response.ok) {
         if (data.userType === "CREATOR") {
-          navigate(`/dashboard`, { state: { username } }); 
+          navigate(`/profile`, { state: { username } });
         } else {
-          navigate("/creators");
+          navigate("/login");
         }
       } else {
-        setError(data.error || "An error occurred while setting up the profile.");
+        setError(
+          data.error || "An error occurred while setting up the profile."
+        );
       }
     } catch (err) {
       console.error(err);

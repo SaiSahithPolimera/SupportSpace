@@ -27,7 +27,7 @@ const SignUp = () => {
       if (response.ok) {
         setError("");
         userType == "SUPPORTER"
-        ? navigate("/creators")
+        ? navigate("/login")
           : navigate("/profile-setup", { state: { username } });
       } else {
         setError(`Signup failed. ${data.error}`);

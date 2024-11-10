@@ -63,77 +63,69 @@ app.get("/api/getCreators", async (req, res) => {
   }
 });
 
-app.post("/api/profile-setup", async (req, res) => {
-  const { username, bio, websiteLink, paymentMethod, category, userType } =
-    req.body;
 
+app.get("/api/creator-details/:userId", async (req, res) => {
+  const { userId } = req.params;
   try {
-    const user = await prisma.user.findUnique({
-      where: { username },
-    });
-
-    if (!user) {
-      return res.status(404).json({ error: "User not found." });
-    }
-
-    const updatedUser = await prisma.user.update({
-      where: { username },
-      data: {
-        userType: userType || user.userType,
-        updatedAt: new Date(),
+    const creatorDetails = await prisma.creator.findUnique({
+      where: { id: parseInt(userId) },
+      include: {
+        user: false,
       },
     });
-
-    if (userType === "CREATOR") {
-      const creator = await prisma.creator.upsert({
-        where: { userId: user.id },
-        update: {
-          bio,
-          websiteLink,
-          paymentMethod,
-          category,
-        },
-        create: {
-          userId: user.id,
-          bio,
-          websiteLink,
-          paymentMethod,
-          category,
-        },
-      });
+    if (!creatorDetails) {
+      return res.status(404).json({ error: "Creator not found" });
     }
-    return res.status(200).json({
-      message: `${userType} profile updated successfully.`,
-      userType: updatedUser.userType,
-      userId: updatedUser.id,
-    });
+    res.json(creatorDetails);
   } catch (error) {
-    console.error("Error during profile setup:", error);
+    console.error("Error fetching creator data:", error);
     res
       .status(500)
-      .json({ error: "An error occurred while setting up the profile." });
+      .json({ error: "An error occurred while fetching creator data" });
   }
 });
 
-app.put("/api/creator-update/:id", async (req, res) => {
-  const { id } = req.params;
-  const { bio, websiteLink, paymentMethod, category } = req.body;
-
+app.post("/api/profile-setup", async (req, res) => {
+  const { username, bio, websiteLink, paymentMethod, category } = req.body;
   try {
-    const creator = await prisma.creator.update({
-      where: { id: parseInt(id) },
-      data: {
-        bio,
-        websiteLink,
-        paymentMethod,
-        category,
-      },
+    const user = await prisma.user.findUnique({
+      where: { username: username },
+      include: { Creator: true },
     });
 
-    res.status(200).json({ message: "Profile updated successfully", creator });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    if (!user.Creator) {
+      await prisma.creator.create({
+        data: {
+          bio: bio,
+          websiteLink: websiteLink,
+          paymentMethod: paymentMethod,
+          category: category,
+          userId: user.id,
+        },
+      });
+    } else {
+      await prisma.creator.update({
+        where: { userId: user.id },
+        data: {
+          bio: bio,
+          websiteLink: websiteLink,
+          paymentMethod: paymentMethod,
+          category: category,
+        },
+      });
+    }
+    res.json({
+      message: "Profile updated successfully",
+      userType: user.userType,
+    });
   } catch (error) {
     console.error("Error updating profile:", error);
-    res.status(500).json({ error: "Error updating profile" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the profile" });
   }
 });
 
@@ -195,7 +187,6 @@ app.post("/api/donate", async (req, res) => {
 
 app.get("/api/creator-funds/:creatorId", async (req, res) => {
   const { creatorId } = req.params;
-  console.log("Creator id");
   try {
     const funds = await prisma.fund.findMany({
       where: { creatorId: parseInt(creatorId) },
@@ -207,16 +198,53 @@ app.get("/api/creator-funds/:creatorId", async (req, res) => {
     res.status(500).json({ success: false, message: "Error fetching funds." });
   }
 });
-app.get("/api/creator-details/:id", async (req, res) => {
-  const { id } = req.params;
-  const creatorDetails = await prisma.creator.findUnique({
-    where: { id: parseInt(id) },
-    include: { user: true },
-  });
-  if (!creatorDetails) {
-    return res.status(404).json({ error: "Creator not found" });
+
+app.get("/api/creator-details/profile/:username", async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { username: username },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const creatorDetails = await prisma.creator.findUnique({
+      where: { userId: user.id },
+      include: {
+        user: true,
+        funds: {
+          include: {
+            supporter: true,
+          },
+        },
+        supporters: true,
+      },
+    });
+
+    if (!creatorDetails) {
+      return res.status(404).json({ error: "Creator not found" });
+    }
+
+    const totalDonations = creatorDetails.funds.reduce(
+      (acc, fund) => acc + fund.amount,
+      0
+    );
+
+    const uniqueSupporters = new Set(creatorDetails.funds.map(fund => fund.supporterId));
+    const supporterCount = uniqueSupporters.size;
+
+    res.json({
+      ...creatorDetails,
+      totalDonations,
+      supporterCount,
+    });
+  } catch (error) {
+    console.error("Error fetching creator data:", error);
+    res.status(500).json({ error: "An error occurred while fetching creator data" });
   }
-  res.json({ bio: creatorDetails.bio });
 });
 
 app.get("/api/categories", async (req, res) => {
@@ -229,6 +257,31 @@ app.get("/api/categories", async (req, res) => {
   } catch (error) {
     console.error("Error fetching categories:", error);
     res.status(500).json({ error: "Error fetching categories" });
+  }
+});
+
+app.put("/api/creator-update/:username", async (req, res) => {
+  const { username } = req.params;
+  const { bio, websiteLink, paymentMethod, category } = req.body;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { username: username },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const updatedCreator = await prisma.creator.update({
+      where: { userId: user.id },
+      data: { bio, websiteLink, paymentMethod, category },
+    });
+    res.status(200).json({
+      message: "Profile updated successfully",
+      creator: updatedCreator,
+    });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ error: "An error occurred while updating profile" });
   }
 });
 

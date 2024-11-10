@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 
 const CreatorsList = () => {
   const [creators, setCreators] = useState([]);
@@ -10,7 +10,7 @@ const CreatorsList = () => {
   const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
   const { state } = useLocation();
-  const username = state?.username;
+  const username = state?.username || Link.state;
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -20,7 +20,9 @@ const CreatorsList = () => {
         const uniqueCategories = [
           ...new Set(data.creators.map((c) => c.category)),
         ];
-        setCategories(["All", ...uniqueCategories]);        
+        console.log("cat");
+        console.log(categories);
+        setCategories(["All", ...uniqueCategories]);
         setCreators(data.creators);
         setFilteredCreators(data.creators);
       } catch (error) {
@@ -102,11 +104,10 @@ const CreatorsList = () => {
               className="creator-card p-6 bg-white border border-gray-200 rounded-lg shadow-lg hover:shadow-xl hover:border-blue-400 transition duration-300 ease-in-out"
             >
               <div className="flex items-center mb-4">
-                <div className="w-16 h-16 rounded-full bg-gray-300">
-                </div>
+                <div className="w-16 h-16 rounded-full bg-gray-300"></div>
                 <div className="ml-4">
                   <h2 className="text-lg font-semibold text-gray-800">
-                    {creator.fullName}
+                    {creator.user.fullName}
                   </h2>
                   <p className="text-sm text-gray-500">{creator.bio}</p>
                 </div>

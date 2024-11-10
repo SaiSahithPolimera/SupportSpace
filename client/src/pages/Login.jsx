@@ -24,7 +24,7 @@ const Login = () => {
       if (response.ok) {
         console.log("Login successful:", data);
         setError("");
-        data.userType === "SUPPORTER"? navigate("/creators", { state: { username } }) : navigate(`/dashboard/${username}`, { state: { username } });
+        data.userType === "SUPPORTER"? navigate("/creators", { state: { username } }) : navigate(`/profile`, { state: { username } });
       } else {
         setError("Invalid username or password");
       }

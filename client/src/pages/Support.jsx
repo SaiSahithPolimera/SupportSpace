@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { FaUser } from "react-icons/fa";
 import AllFunds from "../components/AllFunds";
 import { LoadingIcon } from "../components/LoadingIcon";
@@ -27,7 +27,6 @@ const Support = () => {
         }),
       });
       const data = await response.json();
-
       if (data.success) {
         setAmount("");
         setFundsUpdated(true);
@@ -62,84 +61,74 @@ const Support = () => {
       Loading...
     </div>
   ) : creator ? (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-md shadow-md p-6 flex flex-col justify-between min-h-full">
-        <form onSubmit={handleDonate} className="space-y-4">
-          <div className="flex items-center mb-3">
-            <FaUser className="text-gray-600 mr-3" />
-            <label className="text-gray-700 text-lg font-semibold">
-              {creator.user.fullName}
-            </label>
-          </div>
+    <div className="flex flex-col min-h-screen bg-gray-100 px-4 md:px-8 lg:px-16 py-8 justify-center">
+      <div className="w-full bg-white rounded-lg shadow-lg p-8 space-y-8">
+        {/* Header */}
+        <header className="flex items-center space-x-4">
+          <FaUser className="text-3xl text-gray-500" />
+          <h2 className="text-2xl font-semibold text-gray-800">Support {creator.user?.fullName || "Creator"}</h2>
+        </header>
 
-          <div>
-            <label className="block text-gray-600 font-medium">Bio</label>
-            <p className="border border-gray-300 rounded-md px-3 py-2 text-gray-700">
-              {creator.bio}
-            </p>
+        {/* Creator Details */}
+        <section className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+            <h3 className="text-lg font-medium text-gray-700">Bio</h3>
+            <p className="text-gray-600 mt-2">{creator.bio || "Not specified"}</p>
           </div>
-
-          <div>
-            <label className="block text-gray-600 font-medium">Website</label>
+          <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+            <h3 className="text-lg font-medium text-gray-700">Website</h3>
             <a
-              href={creator.websiteLink}
+              href={creator.websiteLink || "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="block border border-gray-300 rounded-md px-3 py-2 text-blue-600 hover:text-blue-800"
+              className="text-indigo-600 hover:text-indigo-800 mt-2 block"
             >
-              {creator.websiteLink}
+              {creator.websiteLink || "Not specified"}
             </a>
           </div>
-
-          <div>
-            <label className="block text-gray-600 font-medium">
-              Payment Method
-            </label>
-            <p className="border border-gray-300 rounded-md px-3 py-2 text-gray-700">
-              {creator.paymentMethod || "Not specified"}
-            </p>
+          <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+            <h3 className="text-lg font-medium text-gray-700">Payment Method</h3>
+            <p className="text-gray-600 mt-2">{creator.paymentMethod || "Not specified"}</p>
           </div>
-
-          <div>
-            <label className="block text-gray-600 font-medium">Category</label>
-            <p className="border border-gray-300 rounded-md px-3 py-2 text-gray-700">
-              {creator.category || "Not specified"}
-            </p>
+          <div className="p-4 bg-gray-50 rounded-md border border-gray-200">
+            <h3 className="text-lg font-medium text-gray-700">Category</h3>
+            <p className="text-gray-600 mt-2">{creator.category || "Not specified"}</p>
           </div>
+        </section>
 
-          <div>
-            <label className="block text-green-600 font-semibold text-lg">
-              Support {creator.user.fullName}
-            </label>
-            <div className="flex gap-3 mt-2">
-              <input
-                type="number"
-                min="1"
-                max="10000"
-                placeholder="Enter amount"
-                className="border border-gray-300 rounded-md px-3 py-2 text-gray-700 w-full"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-              <button
-                type="submit"
-                disabled={loadingDonate}
-                className="flex items-center justify-center px-5 py-2 bg-indigo-600 text-white rounded-md"
-              >
-                {loadingDonate ? <LoadingIcon /> : "Donate"}
-              </button>
-            </div>
+        <form onSubmit={handleDonate} className="mt-6 space-y-4">
+          <label className="block text-lg font-semibold text-gray-700">
+            Enter the amount to support
+          </label>
+          <div className="flex items-center gap-4">
+            <input
+              type="number"
+              min="1"
+              max="10000"
+              placeholder="Enter amount"
+              className="w-full border border-gray-300 rounded-lg p-3 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              required
+            />
+            <button
+              type="submit"
+              disabled={loadingDonate}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-lg flex items-center justify-center"
+            >
+              {loadingDonate ? <LoadingIcon /> : "Donate"}
+            </button>
           </div>
         </form>
 
-        <div className="flex justify-between mt-6">
+        {/* Funds Section */}
+        <section className="mt-8">
           <AllFunds creatorId={creatorId} fundsUpdated={fundsUpdated} />
-        </div>
+        </section>
       </div>
     </div>
   ) : (
-    <div className="text-center">Creator not found.</div>
+    <div className="text-center text-gray-700 text-lg">Creator not found.</div>
   );
 };
 

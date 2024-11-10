@@ -1,11 +1,12 @@
-// routes.js
-import Dashboard from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import ProfileSetup from "./pages/ProfileSetup";
 import SignUp from "./pages/SignUp";
 import CreatorsList from "./pages/CreatorsList";
 import Support from "./pages/Support";
+import ProfileEdit from "./components/ProfileEdit";
+
 
 const routes = [
   {
@@ -21,8 +22,8 @@ const routes = [
     element: <SignUp />,
   },
   {
-    path: "/dashboard",
-    element: <Dashboard />,
+    path: "/profile",
+    element: <Profile />,
   },
   {
     path: "/profile-setup",
@@ -35,6 +36,10 @@ const routes = [
   {
     path: "/support/:creatorId",
     element: <Support />,
+  },
+  {
+    path: "/profile/edit",
+    element: <ProfileEdit />,
   },
 ];
 
